@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: todoapp1-deployment
+  labels:
+    app: todoapp1
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todoapp1
+  template:
+    metadata:
+      labels:
+        app: todoapp1
+    spec:
+      imagePullSecrets: 
+        - name: my-todo-app1-secret  
+      containers:
+      - name: todoapp1
+        image: indranivaishnavi1809/todo-app1:latest
+        ports:
+          - containerPort: 8000
