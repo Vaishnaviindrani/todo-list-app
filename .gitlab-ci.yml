@@ -1,0 +1,65 @@
+stages:
+    - Prepare
+    - Test
+    - Build
+    - Deploy
+
+variables:
+    image_name: indranivaishnavi1809/todoapp
+    image_tag: to-do-ci-cd
+
+Prepare:
+    stage: Prepare
+    script:
+        - echo "Starting Pipeline"
+        - echo "Prepare stage completed"
+
+run_tests:
+    stage: Test
+    image: python:3.9-slim
+    before_script:
+        - pip install -r requirements.txt
+    script:
+        - python -m pytest test/tests.py
+    after_script:
+        - echo "Test Stage Completed"
+
+build_image:
+    stage: Build
+    image: docker:27.5.1-cli
+    services:
+        - docker:27.5.1-dind 
+    before_script:
+        - docker login -u $DOCKER_USER -p $D_PASS
+    script:
+        - docker build -t $image_name:$image_tag .
+        - docker push $image_name:$image_tag
+    after_script:
+        - echo "Build Stage Completed"
+
+
+
+
+Deploy:
+    stage: Deploy
+    image: docker:27.5.1-cli
+    services:
+        - docker:27.5.1-dind
+    before_script:
+        - echo "$IBM_KEY" | docker login -u iamapikey --password-stdin "icr.io"  
+        - docker info
+    script:
+        # Build the Docker image (so it exists in the CI/CD environment)
+        - docker build -t to-do-app:latest .
+
+        # Tag the image for IBM Cloud
+        - docker tag to-do-app:latest icr.io/$IBM_NAMESPACE/to-do-app:v1
+
+        # Push to IBM Cloud
+        - docker push icr.io/$IBM_NAMESPACE/to-do-app:v1
+    after_script:
+        - echo "Deploy Stage Completed"
+
+
+
+    
